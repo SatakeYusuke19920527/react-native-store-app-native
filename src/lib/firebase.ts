@@ -13,7 +13,15 @@ export const auth = firebase.auth()
 export const storage = firebase.storage()
 
 export const getShops = async () => {
-  const snapshot = await db.collection("shops").orderBy("score", "desc").get()
-  const shops = snapshot.docs.map(doc => doc.data() as Shop)
-  return shops
+  try {
+    const snapshot = await
+    db
+      .collection("shops")
+      .orderBy("score", "desc")
+      .get()
+    const shops = snapshot.docs.map(doc => doc.data() as Shop)
+    return shops
+  } catch (error) {
+    console.log(error)
+  }
 };
