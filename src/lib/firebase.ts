@@ -4,6 +4,7 @@ import "firebase/firestore";
 import "firebase/storage";
 import Constants from 'expo-constants';
 import { Shop } from '../types/Shop';
+import { Review } from '../types/Review';
 import { initialUser, User } from '../types/User';
 
 if (!firebase.apps.length) {
@@ -21,7 +22,7 @@ export const getShops = async () => {
       .collection("shops")
       .orderBy("score", "desc")
       .get()
-    const shops = snapshot.docs.map(doc => doc.data() as Shop)
+    const shops = snapshot.docs.map(doc => ({...doc.data(), id: doc.id} as Shop))
     return shops
   } catch (error) {
     console.log(error)
@@ -48,4 +49,8 @@ export const signIn = async () => {
 
 export const updateUser = async (userId: string, params: any) => {
   await db.collection('users').doc(userId).update(params)
+}
+
+export const addReview = async (shopId: string, review: Review) => {
+  await db.collection('shops').doc(shopId).collection('reviews').add(review)
 }

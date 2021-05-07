@@ -8,22 +8,23 @@ import {
   Text,
 } from 'react-native';
 import firebase from 'firebase';
+import { addReview } from '../lib/firebase';
 // import { createReviewRef, uploadImage } from '../lib/firebase';
-// import { pickImage } from '../lib/image-picker';
-// import { UserContext } from '../contexts/userContext';
+import { pickImage } from '../lib/imagePicker';
+import { UserContext } from '../contexts/UserContext';
 // import { ReviewsContext } from '../contexts/reviewsContext';
 // import { getExtension } from '../utils/file';
 /* components */
 import { IconButton } from '../components/IconButton';
-// import { TextArea } from '../components/TextArea';
-// import { StarInput } from '../components/StarInput';
-// import { Button } from '../components/Button';
-// import { Loading } from '../components/Loading';
+import { TextArea } from '../components/TextArea';
+import { StarInput } from '../components/StarInput';
+import { Button } from '../components/Button';
+import { Loading } from '../components/Loading';
 /* types */
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { RouteProp } from '@react-navigation/native';
-// import { Review } from '../types/review';
+import { Review } from '../types/review';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'CreateReview'>;
@@ -36,7 +37,7 @@ const CreateReviewScreen: React.FC<Props> = ({ navigation, route }: Props) => {
   const [score, setScore] = useState<number>(3);
   const [imageUri, setImageUri] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  // const { user } = useContext(UserContext);
+  const { user } = useContext(UserContext);
   // const { reviews, setReviews } = useContext(ReviewsContext);
 
   useEffect(() => {
@@ -48,66 +49,80 @@ const CreateReviewScreen: React.FC<Props> = ({ navigation, route }: Props) => {
     });
   }, [shop]);
 
-  // const onSubmit = async () => {
-  //   if (!text || !imageUri) {
-  //     Alert.alert('レビューまたは画像がありません');
-  //     return;
-  //   }
-  //   setLoading(true);
-  //   // documentのIDを先に取得
-  //   const reviewDocRef = await createReviewRef(shop.id);
-  //   // storageのpathを決定
-  //   const ext = getExtension(imageUri);
-  //   const storagePath = `reviews/${reviewDocRef.id}.${ext}`;
-  //   // 画像をstorageにアップロード
-  //   const downloadUrl = await uploadImage(imageUri, storagePath);
-  //   // reviewドキュメントを作る
-  //   const review = {
-  //     id: reviewDocRef.id,
-  //     user: {
-  //       name: user.name,
-  //       id: user.id,
-  //     },
-  //     shop: {
-  //       name: shop.name,
-  //       id: shop.id,
-  //     },
-  //     text,
-  //     score,
-  //     imageUrl: downloadUrl,
-  //     updatedAt: firebase.firestore.Timestamp.now(),
-  //     createdAt: firebase.firestore.Timestamp.now(),
-  //   } as Review;
-  //   await reviewDocRef.set(review);
-  //   // レビュー一覧に即時反映する
-  //   setReviews([review, ...reviews]);
+  const onSubmit = async () => {
+    // if (!text || !imageUri) {
+    //   Alert.alert('レビューまたは画像がありません');
+    //   return;
+    // }
+    setLoading(true);
+    const review = {
+      user: {
+        name: user?.name,
+        id: user?.id,
+      },
+      shop: {
+        name: shop.name,
+        id: shop.id,
+      },
+      text,
+      score,
+      updateAt: firebase.firestore.Timestamp.now(),
+      createAt: firebase.firestore.Timestamp.now(),
+    } as Review;
+    await addReview(shop.id, review);
+    // documentのIDを先に取得
+    // const reviewDocRef = await createReviewRef(shop.id);
+    // // storageのpathを決定
+    // const ext = getExtension(imageUri);
+    // const storagePath = `reviews/${reviewDocRef.id}.${ext}`;
+    // // 画像をstorageにアップロード
+    // const downloadUrl = await uploadImage(imageUri, storagePath);
+    // // reviewドキュメントを作る
+    // const review = {
+    //   id: reviewDocRef.id,
+    //   user: {
+    //     name: user.name,
+    //     id: user.id,
+    //   },
+    //   shop: {
+    //     name: shop.name,
+    //     id: shop.id,
+    //   },
+    //   text,
+    //   score,
+    //   imageUrl: downloadUrl,
+    //   updatedAt: firebase.firestore.Timestamp.now(),
+    //   createdAt: firebase.firestore.Timestamp.now(),
+    // } as Review;
+    // await reviewDocRef.set(review);
+    // // レビュー一覧に即時反映する
+    // setReviews([review, ...reviews]);
 
-  //   setLoading(false);
-  //   navigation.goBack();
-  // };
+    setLoading(false);
+    navigation.goBack();
+  };
 
-  // const onPickImage = async () => {
-  //   const uri = await pickImage();
-  //   setImageUri(uri);
-  // };
+  const onPickImage = async () => {
+    const uri = await pickImage();
+    setImageUri(uri);
+  };
   return (
     <SafeAreaView style={styles.container}>
-      <Text>Create review screen</Text>
-      {/* <StarInput score={score} onChangeScore={(value) => setScore(value)} />
+      <StarInput score={score} onChangeScore={(value) => setScore(value)} />
       <TextArea
         value={text}
         onChangeText={(value) => setText(value)}
         label="レビュー"
         placeholder="レビューを書いて下さい"
-      /> */}
+      />
       <View style={styles.photoContainer}>
-        <IconButton name="camera" color="#ccc" />
+        <IconButton name="camera" onPress={() => {}} color="#ccc" />
         {!!imageUri && (
           <Image source={{ uri: imageUri }} style={styles.image} />
         )}
       </View>
-      {/* <Button text="レビューを投稿する" onPress={onSubmit} />
-      <Loading visible={loading} /> */}
+      <Button text="レビューを投稿する" onPress={onSubmit} />
+      <Loading visible={loading} />
     </SafeAreaView>
   );
 };
