@@ -5,27 +5,20 @@ import {
   ActivityIndicator,
   Text,
 } from 'react-native';
-// import { signin, updateUser } from '../lib/firebase';
+import { signIn } from '../lib/firebase';
 // import { registerForPushNotificationsAsync } from '../lib/notification';
-// import { UserContext } from '../contexts/userContext';
+import { UserContext } from '../contexts/UserContext';
 
 const AuthScreen: React.FC = () => {
-  // const { setUser } = useContext(UserContext);
+  const { setUser } = useContext(UserContext);
 
-  // useEffect(() => {
-  //   const fetchUser = async () => {
-  //     const user = await signin();
-  //     // push通知のtokenを取得
-  //     const pushToken = await registerForPushNotificationsAsync();
-  //     if (pushToken && user.pushToken !== pushToken) {
-  //       await updateUser(user.id, { pushToken });
-  //       user.pushToken = pushToken;
-  //     }
-
-  //     setUser(user);
-  //   };
-  //   fetchUser();
-  // }, []);
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await signIn();
+      setUser(user);
+    };
+    fetchUser();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>

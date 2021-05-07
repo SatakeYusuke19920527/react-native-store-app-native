@@ -1,13 +1,13 @@
 import React, { useState, useContext } from 'react';
 import { StyleSheet, SafeAreaView, Text } from 'react-native';
 import firebase from 'firebase';
-// import { updateUser } from '../lib/firebase';
+import { updateUser } from '../lib/firebase';
 /* components */
-// import { Form } from '../components/Form';
-// import { Button } from '../components/Button';
-// import { Loading } from '../components/Loading';
+import { Form } from '../components/Form';
+import { Button } from '../components/Button';
+import { Loading } from '../components/Loading';
 /* contexts */
-// import { UserContext } from '../contexts/userContext';
+import { UserContext } from '../contexts/UserContext';
 /* types */
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
@@ -19,31 +19,31 @@ type Props = {
 };
 
 const UserScreen: React.FC<{}> = () => {
-  // const { user, setUser } = useContext(UserContext);
-  // const [name, setName] = useState<string>(user.name);
+  const { user, setUser } = useContext(UserContext);
+  const [name, setName] = useState<string>(user!.name);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // const onSubmit = async () => {
-  //   setLoading(true);
-  //   const updatedAt = firebase.firestore.Timestamp.now();
-  //   await updateUser(user.id, { name, updatedAt });
-  //   setUser({ ...user, name, updatedAt });
-  //   setLoading(false);
-  // };
+  const onSubmit = async () => {
+    setLoading(true);
+    const updateAt = firebase.firestore.Timestamp.now();
+    const uid = user?.id;
+    await updateUser(uid!, { name, updateAt });
+    setUser({ ...user, name, updateAt });
+    setLoading(false);
+    setName('');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text>UserScreen</Text>
-
-      {/* <Form
+      <Form
         value={name}
         onChangeText={(text) => {
           setName(text);
         }}
         label="名前"
-      /> */}
-      {/* <Button onPress={onSubmit} text="保存する" />
-      <Loading visible={loading} /> */}
+      />
+      <Button onPress={onSubmit} text="保存する" />
+      <Loading visible={loading} />
     </SafeAreaView>
   );
 };
