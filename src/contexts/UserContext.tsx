@@ -2,7 +2,7 @@ import { createContext } from 'react';
 import { User } from '../types/User';
 
 type UserContextValue = {
-  user: User | null;
+  user: User | null | undefined;
   setUser: (user: User | null) => void;
 };
 

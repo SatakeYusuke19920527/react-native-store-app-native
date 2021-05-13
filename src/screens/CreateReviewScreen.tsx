@@ -1,19 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
-import {
-  StyleSheet,
-  SafeAreaView,
-  View,
-  Image,
-  Alert,
-  Text,
-} from 'react-native';
+import { StyleSheet, SafeAreaView, View, Image, Alert } from 'react-native';
 import firebase from 'firebase';
-import { addReview } from '../lib/firebase';
-// import { createReviewRef, uploadImage } from '../lib/firebase';
+import { createReviewRef, uploadImage } from '../lib/firebase';
 import { pickImage } from '../lib/imagePicker';
 import { UserContext } from '../contexts/UserContext';
-// import { ReviewsContext } from '../contexts/reviewsContext';
-// import { getExtension } from '../utils/file';
+import { ReviewsContext } from '../contexts/ReviewsContext';
+import { getExtension } from '../utils/file';
 /* components */
 import { IconButton } from '../components/IconButton';
 import { TextArea } from '../components/TextArea';
@@ -35,10 +27,10 @@ const CreateReviewScreen: React.FC<Props> = ({ navigation, route }: Props) => {
   const { shop } = route.params;
   const [text, setText] = useState<string>('');
   const [score, setScore] = useState<number>(3);
-  const [imageUri, setImageUri] = useState<string>('');
+  const [imageUri, setImageUri] = useState<string | undefined>('');
   const [loading, setLoading] = useState<boolean>(false);
   const { user } = useContext(UserContext);
-  // const { reviews, setReviews } = useContext(ReviewsContext);
+  const { reviews, setReviews } = useContext(ReviewsContext);
 
   useEffect(() => {
     navigation.setOptions({
@@ -50,12 +42,21 @@ const CreateReviewScreen: React.FC<Props> = ({ navigation, route }: Props) => {
   }, [shop]);
 
   const onSubmit = async () => {
-    // if (!text || !imageUri) {
-    //   Alert.alert('レビューまたは画像がありません');
-    //   return;
-    // }
+    if (!text || !imageUri) {
+      Alert.alert('レビューまたは画像がありません');
+      return;
+    }
     setLoading(true);
+    // documentのIDを先に取得
+    const reviewDocRef = await createReviewRef(shop.id!);
+    // storageのpathを決定
+    const ext = getExtension(imageUri);
+    const storagePath = `reviews/${reviewDocRef.id}.${ext}`;
+    // 画像をstorageにアップロード
+    const downloadUrl = await uploadImage(imageUri, storagePath);
+    // reviewドキュメントを作る
     const review = {
+      id: reviewDocRef.id,
       user: {
         name: user?.name,
         id: user?.id,
@@ -66,37 +67,13 @@ const CreateReviewScreen: React.FC<Props> = ({ navigation, route }: Props) => {
       },
       text,
       score,
+      imageUrl: downloadUrl,
       updateAt: firebase.firestore.Timestamp.now(),
       createAt: firebase.firestore.Timestamp.now(),
     } as Review;
-    await addReview(shop.id, review);
-    // documentのIDを先に取得
-    // const reviewDocRef = await createReviewRef(shop.id);
-    // // storageのpathを決定
-    // const ext = getExtension(imageUri);
-    // const storagePath = `reviews/${reviewDocRef.id}.${ext}`;
-    // // 画像をstorageにアップロード
-    // const downloadUrl = await uploadImage(imageUri, storagePath);
-    // // reviewドキュメントを作る
-    // const review = {
-    //   id: reviewDocRef.id,
-    //   user: {
-    //     name: user.name,
-    //     id: user.id,
-    //   },
-    //   shop: {
-    //     name: shop.name,
-    //     id: shop.id,
-    //   },
-    //   text,
-    //   score,
-    //   imageUrl: downloadUrl,
-    //   updatedAt: firebase.firestore.Timestamp.now(),
-    //   createdAt: firebase.firestore.Timestamp.now(),
-    // } as Review;
-    // await reviewDocRef.set(review);
-    // // レビュー一覧に即時反映する
-    // setReviews([review, ...reviews]);
+    await reviewDocRef.set(review);
+    // レビュー一覧に即時反映する
+    setReviews([review, ...reviews]);
 
     setLoading(false);
     navigation.goBack();
@@ -116,7 +93,7 @@ const CreateReviewScreen: React.FC<Props> = ({ navigation, route }: Props) => {
         placeholder="レビューを書いて下さい"
       />
       <View style={styles.photoContainer}>
-        <IconButton name="camera" onPress={() => {}} color="#ccc" />
+        <IconButton name="camera" onPress={onPickImage} color="#ccc" />
         {!!imageUri && (
           <Image source={{ uri: imageUri }} style={styles.image} />
         )}
